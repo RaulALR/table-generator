@@ -1,0 +1,84 @@
+<mat-card>
+    <div class="table-result">
+        <div class="table-header">
+            <div class="create-button-container" *ngIf="buttonOptionsData || showMultiCheckButton">
+                <ng-container *ngFor="let item of buttonOptionsData">
+                    <button class="primary" *ngIf="getButtonCondition(item)" mat-button color="primary" (click)="buttonEvent.emit({event: item.event, data: $event})">
+                        <mat-icon>{{ item.icon }}</mat-icon>
+                        {{ item.label }}
+                    </button>
+                </ng-container>
+                <button *ngIf="showMultiCheckButton" class="primary" mat-button color="primary" (click)="onMultiCheckAction()" [disabled]="isMulticheckDisabled()">
+                    <mat-icon>unarchive</mat-icon>
+                    {{ multiCheck.buttonLabel }}
+                </button>
+            </div>
+            <mat-paginator [length]="paginatorOptionData.resultsLength" [pageSize]="paginatorOptionData.limit" showFirstLastButtons (page)="pageEvent($event)"
+                class="mat-paginator-sticky" *ngIf="paginatorOptionData"></mat-paginator>
+        </div>
+        <div class="result-table-wrapper" [ngClass]="{'result-table-wrapper':!footerData, 'result-table-wrapper-with-footer':footerData}">
+            <mat-table *ngIf="dataSource" [dataSource]="dataSource" matSort matSortDirection="{{sortOptionData.direction}}" matSortActive="{{sortOptionData.activeSort}}"
+                class="classList" (matSortChange)="matSortChange($event)" matSortDisableClear class="result-table mat-elevation-z8">
+                <ng-container *ngFor="let item of dataColumns;" matColumnDef="{{item.name}}">
+                    <ng-container *ngIf="item.name === 'btnSuboperations'" matColumnDef="btnSuboperations" sticky>
+                        <mat-header-cell *matHeaderCellDef></mat-header-cell>
+                        <mat-cell *matCellDef="let item; let i = index">
+                            <ng-container *ngIf="showSuboperationsGeneratedData[i]">
+                                <button mat-icon-button [matMenuTriggerFor]="menu" (click)="$event.stopPropagation()">
+                                    <mat-icon>more_vert</mat-icon>
+                                </button>
+                                <mat-menu #menu="matMenu">
+                                    <button mat-menu-item *ngFor="let sub of suboperationsGeneratedData[i]" (click)="suboperationClicked(sub.label, item)">
+                                        <span class="margin-select">{{sub.label}}</span>
+                                    </button>
+                                </mat-menu>
+                            </ng-container>
+                            <button mat-icon-button (click)="$event.stopPropagation(); trashOptionAction(item)" *ngIf="trashOption">
+                                <mat-icon>delete_forever</mat-icon>
+                            </button>
+                            <ng-container *ngIf="multiCheck">
+                                <mat-checkbox *ngIf="showMulticheck[i]" [checked]="multiCheckArray[i]"></mat-checkbox>
+                            </ng-container>
+                        </mat-cell>
+                    </ng-container>
+                    <ng-container>
+                        <ng-container *ngIf="item.sort; else NotSorteable">
+                            <mat-header-cell mat-sort-header disableClear="true" *matHeaderCellDef>
+                                {{item.label}}
+                            </mat-header-cell>
+                        </ng-container>
+                        <ng-template #NotSorteable>
+                            <mat-header-cell disableClear="true" *matHeaderCellDef>
+                                {{item.label}}
+                            </mat-header-cell>
+                        </ng-template>
+                        <mat-cell [class.number-cell]="item.isCurrency || item.isShares" *matCellDef="let element">
+                            <mat-checkbox selected *ngIf="item.isCheckbox; else showLabel" [checked]="element[item.name]"></mat-checkbox>
+                            <ng-template #showLabel>
+                                <ng-container *ngIf="showWhen && element[item.showWhen]; else showWhen"></ng-container>
+                                <ng-template #showWhen>
+                                    <ng-container *ngIf="item.objectToCompare; else showInstance">
+                                        {{getObjectToCompare(element, item)}}
+                                    </ng-container>
+                                    <ng-template #showInstance>
+                                        {{getInstaceName(element, item) }}
+                                    </ng-template>
+                                </ng-template>
+                            </ng-template>
+                        </mat-cell>
+                    </ng-container>
+                </ng-container>
+                <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+                <mat-row *matRowDef="let row; columns: displayedColumns; let index = index; " (click)="onRowClick(row, index, $event)"></mat-row>
+            </mat-table>
+        </div>
+        <div *ngIf="footerData" class="table-footer-data">
+            <ng-container *ngFor="let item of footerData;">
+                <div class="data-group">
+                    <h3>{{item.name}}:</h3>
+                    <p>{{item.value | NgxNumberEsPipe:item.decimal}}</p>
+                </div>
+            </ng-container>
+        </div>
+    </div>
+</mat-card>
